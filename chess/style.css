@@ -1,0 +1,27 @@
+#board {
+    display: inline-grid;
+    grid-template-columns: repeat(8, 3rem);
+    grid-template-rows: repeat(8, 3rem);
+    background-color: black;
+    gap: 1px;
+    padding: 1px;
+}
+
+.square {
+    width: 100%;
+    height: 100%;
+    font-size: 2rem;
+    background-color: white;
+    -webkit-user-select: none;
+    user-select: none;
+    text-align: center;
+    align-content: center;
+}
+
+.selected {
+    background-color: red;
+}
+
+.legal-move {
+    background-color: orange;
+}
