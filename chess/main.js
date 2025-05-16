@@ -53,7 +53,11 @@ class ChessGame {
       for (let col = 0; col < 8; col++) {
         const square = document.createElement("div");
         square.className = `square s${row}x${col}`; // row1 col4 = s1x4
-        square.classList.add("square", `s${row}x${col}`, (row + col) % 2 === 0 ? "light-square" : "dark-square")
+        square.classList.add(
+          "square",
+          `s${row}x${col}`,
+          (row + col) % 2 === 0 ? "light-square" : "dark-square",
+        );
         square.dataset.row = row.toString();
         square.dataset.col = col.toString();
         square.textContent = this.getPiece(row, col) ?? "";
@@ -82,50 +86,21 @@ class ChessGame {
         castleWhiteQueenside: true,
       };
       this.renderBoard();
-    })
+    });
   }
 
   handleClick(row, col) {
     const square = document.querySelector(`.s${row}x${col}`);
     if (square.classList.contains("legal-move")) {
-      // Reset En Passant
-      this.gameState.enPassant = null;
-      // Promotion of pawns to a queen
-      if (
-        this.pieces[ // If piece to move is a pawn
-          this.getPiece(this.selectedPiece.row, this.selectedPiece.col)
-        ] === "pawn"
-      ) {
-        if (row === 0 || row === 7) {
-          // If piece is moving into rows 0 or 7
-          this.setPiece(
-            this.selectedPiece.row,
-            this.selectedPiece.col,
-            this.gameState.player === "white" ? "♕" : "♛",
-          );
-        }
-        // If piece moved two rows
-        if (Math.abs(row - this.selectedPiece.row) === 2) {
-          this.gameState.enPassant = { row, col };
-        }
-
-        // If moving pawn into a different column and onto an empty space, assume en passant.
-        if (
-          col !== this.selectedPiece.col &&
-          this.getPiece(row, col) === null
-        ) {
-          this.setPiece(this.selectedPiece.row, col, null);
-        }
+      const move = JSON.parse(square.dataset.move);
+      this.makeMove(move);
+      
+      // Set the En Passant flag.
+      if (move.doublePawnMove) {
+        this.gameState.enPassant = move.doublePawnMove;
+      } else {
+        this.gameState.enPassant = null;
       }
-
-      // Move piece to the new position, overriding the previous piece
-      this.setPiece(
-        row,
-        col,
-        this.getPiece(this.selectedPiece.row, this.selectedPiece.col),
-      );
-      this.setPiece(this.selectedPiece.row, this.selectedPiece.col, null);
-      this.renderBoard();
       this.selectedPiece = null;
 
       // Switch turns
@@ -134,6 +109,8 @@ class ChessGame {
       } else {
         this.gameState.player = "white";
       }
+      
+      this.renderBoard();
     } else {
       this.deselectAllSquares();
       // Deselect if clicked the same square or a square of a different color
@@ -150,9 +127,11 @@ class ChessGame {
         const legalMoves = this.getLegalMoves(row, col);
         console.log(legalMoves);
         legalMoves.forEach((move) => {
-          document
-            .querySelector(`.s${move.toRow}x${move.toCol}`)
-            .classList.add("legal-move");
+          const legalSquare = document.querySelector(
+            `.s${move.toRow}x${move.toCol}`,
+          );
+          legalSquare.classList.add("legal-move");
+          legalSquare.dataset.move = JSON.stringify(move);
         });
       }
     }
@@ -184,6 +163,30 @@ class ChessGame {
 
   isInbounds(row, col) {
     return row >= 0 && row < 8 && col >= 0 && col < 8;
+  }
+
+  makeMove(move) {
+    // Clear previous space.
+    this.setPiece(move.fromRow, move.fromCol, null);
+    // Clear captured piece.
+    if (move.capturedRow !== null && move.capturedCol !== null) {
+      console.log(
+        `${this.getPiece(move.capturedRow, move.capturedCol)} captured`,
+      );
+      this.setPiece(move.capturedRow, move.capturedCol, null);
+    }
+    // Set space to the moved piece.
+    this.setPiece(move.toRow, move.toCol, move.piece);
+
+
+    if (move.castling) {
+      this.setPiece(move.castling.fromRow, move.castling.fromCol, null);
+      this.setPiece(
+        move.castling.toRow,
+        move.castling.toCol,
+        move.castling.piece,
+      );
+    }
   }
 
   getLegalMoves(row, col) {
@@ -262,11 +265,84 @@ class ChessGame {
           { drow: 1, dcol: 0 },
           { drow: 1, dcol: 1 },
         ];
-        for (const direction of directions) {
-          const toRow = row + direction.drow;
-          const toCol = col + direction.dcol;
-          if (this.isValid(toRow, toCol, color)) {
-            legalMoves.push(new Move(row, col, toRow, toCol, piece));
+        legalMoves = this.getLegalLeapingMoves(
+          row,
+          col,
+          piece,
+          color,
+          directions,
+        );
+        if (color === "white") {
+          if (
+            this.gameState.castleWhiteKingside &&
+            this.isEmpty(7, 5) &&
+            this.isEmpty(7, 6)
+          ) {
+            legalMoves.push(
+              new Move(row, col, row, 6, piece, {
+                castling: {
+                  fromRow: row,
+                  fromCol: 7,
+                  toRow: row,
+                  toCol: 5,
+                  piece: this.getPiece(row, 7),
+                },
+              }),
+            );
+          }
+          if (
+            this.gameState.castleWhiteQueenside &&
+            this.isEmpty(7, 3) &&
+            this.isEmpty(7, 2) &&
+            this.isEmpty(7, 1)
+          ) {
+            legalMoves.push(
+              new Move(row, col, row, 2, piece, {
+                castling: {
+                  fromRow: row,
+                  fromCol: 0,
+                  toRow: row,
+                  toCol: 3,
+                  piece: this.getPiece(row, 0),
+                },
+              }),
+            );
+          }
+        } else {
+          if (
+            this.gameState.castleBlackKingside &&
+            this.isEmpty(0, 5) &&
+            this.isEmpty(0, 6)
+          ) {
+            legalMoves.push(
+              new Move(row, col, row, 6, piece, {
+                castling: {
+                  fromRow: row,
+                  fromCol: 7,
+                  toRow: row,
+                  toCol: 5,
+                  piece: this.getPiece(row, 7),
+                },
+              }),
+            );
+          }
+          if (
+            this.gameState.castleBlackQueenside &&
+            this.isEmpty(0, 3) &&
+            this.isEmpty(0, 2) &&
+            this.isEmpty(0, 1)
+          ) {
+            legalMoves.push(
+              new Move(row, col, row, 2, piece, {
+                castling: {
+                  fromRow: row,
+                  fromCol: 0,
+                  toRow: row,
+                  toCol: 3,
+                  piece: this.getPiece(row, 3),
+                },
+              }),
+            );
           }
         }
         break;
@@ -282,18 +358,13 @@ class ChessGame {
           { drow: -1, dcol: 2 },
           { drow: 1, dcol: 2 },
         ];
-        for (const direction of directions) {
-          const toRow = row + direction.drow;
-          const toCol = col + direction.dcol;
-          if (this.isValid(toRow, toCol, color)) {
-            const options = {};
-            if (!this.isEmpty(toRow, toCol)) {
-              options.capturedRow = toRow;
-              options.capturedCol = toCol;
-            }
-            legalMoves.push(new Move(row, col, toRow, toCol, piece, options));
-          }
-        }
+        legalMoves = this.getLegalLeapingMoves(
+          row,
+          col,
+          piece,
+          color,
+          directions,
+        );
         break;
       }
       case "rook": {
@@ -352,6 +423,23 @@ class ChessGame {
         }
         legalMoves.push(new Move(row, col, toRow, toCol, piece, options));
         if (!this.isEmpty(toRow, toCol)) break;
+      }
+    }
+    return legalMoves;
+  }
+
+  getLegalLeapingMoves(row, col, piece, color, directions) {
+    const legalMoves = [];
+    for (const direction of directions) {
+      const toRow = row + direction.drow;
+      const toCol = col + direction.dcol;
+      if (this.isValid(toRow, toCol, color)) {
+        const options = {};
+        if (!this.isEmpty(toRow, toCol)) {
+          options.capturedRow = toRow;
+          options.capturedCol = toCol;
+        }
+        legalMoves.push(new Move(row, col, toRow, toCol, piece, options));
       }
     }
     return legalMoves;
