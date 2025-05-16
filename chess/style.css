@@ -1,6 +1,13 @@
 body {
-    font-family: "Noto Sans", "DejaVu Sans", "Segoe UI Symbol", "Apple Symbols",
-    "FreeSerif", sans-serif;
+    font-family:
+        "Noto Sans", "DejaVu Sans", "Segoe UI Symbol", "Apple Symbols",
+        "FreeSerif", sans-serif;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #board {
