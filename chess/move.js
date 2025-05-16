@@ -7,6 +7,7 @@ export class Move {
     this.piece = piece;
     this.capturedRow = options.capturedRow ?? null;
     this.capturedCol = options.capturedCol ?? null;
+    this.doublePawnMove = options.doublePawnMove ?? null;
     this.castling = options.castling ?? null; // { rookRow, rookFromCol, rookToCol  }
   }
 }

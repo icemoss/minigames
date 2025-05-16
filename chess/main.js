@@ -53,6 +53,7 @@ class ChessGame {
       for (let col = 0; col < 8; col++) {
         const square = document.createElement("div");
         square.className = `square s${row}x${col}`; // row1 col4 = s1x4
+        square.classList.add("square", `s${row}x${col}`, (row + col) % 2 === 0 ? "light-square" : "dark-square")
         square.dataset.row = row.toString();
         square.dataset.col = col.toString();
         square.textContent = this.getPiece(row, col) ?? "";
@@ -69,6 +70,19 @@ class ChessGame {
       const col = parseInt(square.dataset.col);
       this.handleClick(row, col);
     });
+    document.querySelector("#reset").addEventListener("click", () => {
+      this.selectedPiece = null;
+      this.gameState = {
+        player: "white",
+        boardState: this.createInitialBoardState(), // 2D array [row][col]
+        enPassant: null,
+        castleBlackKingside: true,
+        castleBlackQueenside: true,
+        castleWhiteKingside: true,
+        castleWhiteQueenside: true,
+      };
+      this.renderBoard();
+    })
   }
 
   handleClick(row, col) {
@@ -188,23 +202,28 @@ class ChessGame {
             ((color === "white" && row === 6) ||
               (color === "black" && row === 1))
           ) {
-            legalMoves.push(new Move(row, col, row + offset * 2, col, piece));
+            legalMoves.push(
+              new Move(row, col, row + offset * 2, col, piece, {
+                doublePawnMove: { row: row + offset * 2, col },
+              }),
+            );
           }
         }
         // Capturing
-        if (color === "white") {
-          if (this.getColor(this.getPiece(row + offset, col - 1)) === "black") {
-            legalMoves.push(new Move(row, col, row + offset, col - 1, piece));
-          }
-          if (this.getColor(this.getPiece(row + offset, col + 1)) === "black") {
-            legalMoves.push(new Move(row, col, row + offset, col + 1, piece));
-          }
-        } else {
-          if (this.getColor(this.getPiece(row + offset, col - 1)) === "white") {
-            legalMoves.push(new Move(row, col, row + offset, col - 1, piece));
-          }
-          if (this.getColor(this.getPiece(row + offset, col + 1)) === "white") {
-            legalMoves.push(new Move(row, col, row + offset, col + 1, piece));
+        const diagonalColumns = [col - 1, col + 1];
+        const opponentColor = color === "white" ? "black" : "white";
+
+        for (const targetCol of diagonalColumns) {
+          if (
+            this.getColor(this.getPiece(row + offset, targetCol)) ===
+            opponentColor
+          ) {
+            legalMoves.push(
+              new Move(row, col, row + offset, targetCol, piece, {
+                capturedRow: row + offset,
+                capturedCol: targetCol,
+              }),
+            );
           }
         }
 
@@ -221,10 +240,15 @@ class ChessGame {
                 row + offset,
                 this.gameState.enPassant.col,
                 piece,
+                {
+                  capturedRow: row,
+                  capturedCol: this.gameState.enPassant.col,
+                },
               ),
             );
           }
         }
+
         break;
       }
       case "king": {
@@ -238,19 +262,13 @@ class ChessGame {
           { drow: 1, dcol: 0 },
           { drow: 1, dcol: 1 },
         ];
-        directions.forEach((direction) => {
-          if (this.isValid(row + direction.drow, col + direction.dcol, color)) {
-            legalMoves.push(
-              new Move(
-                row,
-                col,
-                row + direction.drow,
-                col + direction.dcol,
-                piece,
-              ),
-            );
+        for (const direction of directions) {
+          const toRow = row + direction.drow;
+          const toCol = col + direction.dcol;
+          if (this.isValid(toRow, toCol, color)) {
+            legalMoves.push(new Move(row, col, toRow, toCol, piece));
           }
-        });
+        }
         break;
       }
       case "knight": {
@@ -264,19 +282,18 @@ class ChessGame {
           { drow: -1, dcol: 2 },
           { drow: 1, dcol: 2 },
         ];
-        directions.forEach((direction) => {
-          if (this.isValid(row + direction.drow, col + direction.dcol, color)) {
-            legalMoves.push(
-              new Move(
-                row,
-                col,
-                row + direction.drow,
-                col + direction.dcol,
-                piece,
-              ),
-            );
+        for (const direction of directions) {
+          const toRow = row + direction.drow;
+          const toCol = col + direction.dcol;
+          if (this.isValid(toRow, toCol, color)) {
+            const options = {};
+            if (!this.isEmpty(toRow, toCol)) {
+              options.capturedRow = toRow;
+              options.capturedCol = toCol;
+            }
+            legalMoves.push(new Move(row, col, toRow, toCol, piece, options));
           }
-        });
+        }
         break;
       }
       case "rook": {
@@ -322,16 +339,21 @@ class ChessGame {
 
   getLegalDirectionMoves(row, col, piece, color, directions) {
     const legalMoves = [];
-    directions.forEach((direction) => {
+    for (const direction of directions) {
       for (
         let toRow = row + direction.drow, toCol = col + direction.dcol;
         this.isValid(toRow, toCol, color) === true;
         toRow += direction.drow, toCol += direction.dcol
       ) {
-        legalMoves.push(new Move(row, col, toRow, toCol, piece));
-        if (this.isEmpty(toRow, toCol) === false) break;
+        const options = {};
+        if (!this.isEmpty(toRow, toCol)) {
+          options.capturedRow = toRow;
+          options.capturedCol = toCol;
+        }
+        legalMoves.push(new Move(row, col, toRow, toCol, piece, options));
+        if (!this.isEmpty(toRow, toCol)) break;
       }
-    });
+    }
     return legalMoves;
   }
 

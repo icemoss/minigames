@@ -1,21 +1,29 @@
+body {
+        font-family: 'Noto Sans','DejaVu Sans', 'Segoe UI Symbol', 'Apple Symbols', 'FreeSerif', sans-serif;
+    }
+
 #board {
     display: inline-grid;
-    grid-template-columns: repeat(8, 3rem);
-    grid-template-rows: repeat(8, 3rem);
-    background-color: black;
-    gap: 1px;
-    padding: 1px;
+    grid-template-columns: repeat(8, 4rem);
+    grid-template-rows: repeat(8, 4rem);
 }
 
 .square {
     width: 100%;
     height: 100%;
-    font-size: 2rem;
-    background-color: white;
+    font-size: 3rem;
     -webkit-user-select: none;
     user-select: none;
     text-align: center;
     align-content: center;
+}
+
+.light-square {
+    background-color: #ebecd0;
+}
+
+.dark-square {
+    background-color: #779556;
 }
 
 .selected {
