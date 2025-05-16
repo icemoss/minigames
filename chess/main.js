@@ -94,7 +94,7 @@ class ChessGame {
     if (square.classList.contains("legal-move")) {
       const move = JSON.parse(square.dataset.move);
       this.makeMove(move);
-      
+
       // Set the En Passant flag.
       if (move.doublePawnMove) {
         this.gameState.enPassant = move.doublePawnMove;
@@ -104,13 +104,22 @@ class ChessGame {
       this.selectedPiece = null;
 
       // Switch turns
-      if (this.gameState.player === "white") {
-        this.gameState.player = "black";
-      } else {
-        this.gameState.player = "white";
-      }
-      
+      const nextPlayer = this.gameState.player === "white" ? "black" : "white";
+      this.gameState.player = nextPlayer;
+
       this.renderBoard();
+
+      if (this.isCheckmate(nextPlayer)) {
+        setTimeout(() => {
+          alert(
+            `Checkmate! ${nextPlayer === "white" ? "Black" : "White"} wins!`,
+          );
+        }, 50);
+      } else if (this.isStalemate(nextPlayer)) {
+        setTimeout(() => {
+          alert("Stalemate! It is a draw!");
+        }, 50);
+      }
     } else {
       this.deselectAllSquares();
       // Deselect if clicked the same square or a square of a different color
@@ -124,7 +133,7 @@ class ChessGame {
         square.classList.add("selected");
 
         // Select all legal moves
-        const legalMoves = this.getLegalMoves(row, col);
+        const legalMoves = this.getLegalMovesWithCheckFilter(row, col);
         console.log(legalMoves);
         legalMoves.forEach((move) => {
           const legalSquare = document.querySelector(
@@ -178,6 +187,27 @@ class ChessGame {
     // Set space to the moved piece.
     this.setPiece(move.toRow, move.toCol, move.piece);
 
+    // Disqualify castling when king or rook moved.
+    if (this.pieces[move.piece] === "king") {
+      if (this.getColor(move.piece) === "white") {
+        this.gameState.castleWhiteKingside = false;
+        this.gameState.castleWhiteQueenside = false;
+      } else {
+        this.gameState.castleBlackKingside = false;
+        this.gameState.castleBlackQueenside = false;
+      }
+    }
+    if (this.pieces[move.piece] === "rook") {
+      if (move.fromRow === 0 && move.fromCol === 0) {
+        this.gameState.castleBlackQueenside = false;
+      } else if (move.fromRow === 0 && move.fromCol === 7) {
+        this.gameState.castleBlackKingside = false;
+      } else if (move.fromRow === 7 && move.fromCol === 0) {
+        this.gameState.castleWhiteQueenside = false;
+      } else if (move.fromRow === 7 && move.fromCol === 7) {
+        this.gameState.castleWhiteKingside = false;
+      }
+    }
 
     if (move.castling) {
       this.setPiece(move.castling.fromRow, move.castling.fromCol, null);
@@ -189,16 +219,45 @@ class ChessGame {
     }
   }
 
+  getLegalMovesWithCheckFilter(row, col) {
+    const candidateMoves = this.getLegalMoves(row, col);
+    const piece = this.getPiece(row, col);
+    const color = this.getColor(piece);
+
+    return candidateMoves.filter((move) => {
+      const tempGameState = structuredClone(this.gameState);
+      this.makeMove(move);
+
+      const kingPos = this.findKingPosition(color);
+      const wouldBeInCheck = this.isUnderAttack(
+        kingPos.row,
+        kingPos.col,
+        color === "white" ? "black" : "white",
+      );
+
+      this.gameState = tempGameState;
+
+      return !wouldBeInCheck;
+    });
+  }
+
   getLegalMoves(row, col) {
     const piece = this.getPiece(row, col);
     const color = this.getColor(piece);
     let legalMoves = [];
     switch (this.pieces[piece]) {
       case "pawn": {
-        // Direction the pawn moves
+        // Direction the pawn moves.
         const offset = color === "white" ? -1 : 1;
+        // If moving to rows 7 or 0, become a queen.
+        const pawnPiece =
+          row + offset === 7 || row + offset === 0
+            ? color === "white"
+              ? "♕"
+              : "♛"
+            : piece;
         if (this.isEmpty(row + offset, col)) {
-          legalMoves.push(new Move(row, col, row + offset, col, piece));
+          legalMoves.push(new Move(row, col, row + offset, col, pawnPiece));
           // If two squares are empty and the pawn is on the starting row
           if (
             this.isEmpty(row + offset * 2, col) &&
@@ -206,7 +265,7 @@ class ChessGame {
               (color === "black" && row === 1))
           ) {
             legalMoves.push(
-              new Move(row, col, row + offset * 2, col, piece, {
+              new Move(row, col, row + offset * 2, col, pawnPiece, {
                 doublePawnMove: { row: row + offset * 2, col },
               }),
             );
@@ -222,7 +281,7 @@ class ChessGame {
             opponentColor
           ) {
             legalMoves.push(
-              new Move(row, col, row + offset, targetCol, piece, {
+              new Move(row, col, row + offset, targetCol, pawnPiece, {
                 capturedRow: row + offset,
                 capturedCol: targetCol,
               }),
@@ -242,7 +301,7 @@ class ChessGame {
                 col,
                 row + offset,
                 this.gameState.enPassant.col,
-                piece,
+                pawnPiece,
                 {
                   capturedRow: row,
                   capturedCol: this.gameState.enPassant.col,
@@ -443,6 +502,74 @@ class ChessGame {
       }
     }
     return legalMoves;
+  }
+
+  isInCheck(color) {
+    const kingPos = this.findKingPosition(color);
+    return this.isUnderAttack(
+      kingPos.row,
+      kingPos.col,
+      color === "white" ? "black" : "white",
+    );
+  }
+
+  isCheckmate(color) {
+    // Must be in check to be in checkmate.
+    if (!this.isInCheck(color)) return false;
+    return this.areAnyMovesLegal(color);
+  }
+
+  isStalemate(color) {
+    // Cannot be stalemate in check.
+    if (this.isInCheck(color)) return false;
+    return this.areAnyMovesLegal(color);
+  }
+
+  areAnyMovesLegal(color) {
+    // Check for any legal moves.
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const piece = this.getPiece(row, col);
+        if (piece && this.getColor(piece) === color) {
+          const legalMoves = this.getLegalMovesWithCheckFilter(row, col);
+          // If a legal move is found, return false.
+          if (legalMoves.length > 0) return false;
+        }
+      }
+    }
+
+    // If there is no legal moves, return true.
+    return true;
+  }
+
+  findKingPosition(color) {
+    const piece = color === "white" ? "♔" : "♚";
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        if (this.getPiece(row, col) === piece) {
+          return { row, col };
+        }
+      }
+    }
+    return null;
+  }
+
+  isUnderAttack(targetRow, targetCol, byColor) {
+    // Generate all possible moves and see if they can move to the square.
+    for (let fromRow = 0; fromRow < 8; fromRow++) {
+      for (let fromCol = 0; fromCol < 8; fromCol++) {
+        const piece = this.getPiece(fromRow, fromCol);
+        if (piece && this.getColor(piece) === byColor) {
+          const moves = this.getLegalMoves(fromRow, fromCol);
+          for (const move of moves) {
+            if (move.toRow === targetRow && move.toCol === targetCol) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   getColor(piece) {

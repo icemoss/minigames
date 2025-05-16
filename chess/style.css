@@ -1,6 +1,7 @@
 body {
-        font-family: 'Noto Sans','DejaVu Sans', 'Segoe UI Symbol', 'Apple Symbols', 'FreeSerif', sans-serif;
-    }
+    font-family: "Noto Sans", "DejaVu Sans", "Segoe UI Symbol", "Apple Symbols",
+    "FreeSerif", sans-serif;
+}
 
 #board {
     display: inline-grid;

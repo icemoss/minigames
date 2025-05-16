@@ -1,3 +1,5 @@
+"use strict";
+
 export class Move {
   constructor(fromRow, fromCol, toRow, toCol, piece, options = {}) {
     this.fromRow = fromRow;
