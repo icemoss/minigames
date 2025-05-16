@@ -2,6 +2,9 @@ body {
     font-family:
         "Noto Sans", "DejaVu Sans", "Segoe UI Symbol", "Apple Symbols",
         "FreeSerif", sans-serif;
+    font-size: 2rem;
+    background-color: #302e2b;
+    color: white;
 }
 
 main {
@@ -24,6 +27,7 @@ main {
     user-select: none;
     text-align: center;
     align-content: center;
+    color: black;
 }
 
 .light-square {
@@ -40,4 +44,15 @@ main {
 
 .legal-move {
     background-color: orange;
+}
+
+#reset {
+    font-size: 2rem;
+    height: 3rem;
+    width: 6rem;
+}
+
+#two-player {
+    height: 2rem;
+    width: 2rem;
 }

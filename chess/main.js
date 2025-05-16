@@ -4,6 +4,7 @@ import { Move } from "./move.js";
 class ChessGame {
   constructor(twoPlayer) {
     this.board = document.querySelector("#board");
+
     this.whitePieces = new Set(["♔", "♕", "♖", "♗", "♘", "♙"]);
     this.blackPieces = new Set(["♚", "♛", "♜", "♝", "♞", "♟"]);
     this.pieces = {
@@ -37,6 +38,7 @@ class ChessGame {
   }
 
   createInitialBoardState() {
+    // Default board state
     return [
       ["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"], // black pieces (0-7)
       ["♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"], // black pawns (8-15)
@@ -104,10 +106,11 @@ class ChessGame {
   handleClick(row, col) {
     const square = document.querySelector(`.s${row}x${col}`);
     if (square.classList.contains("legal-move")) {
+      // Data for moves are stored in the dataset
       const move = JSON.parse(square.dataset.move);
       this.makeMove(move);
 
-      // Switch turns
+      // Toggle player
       const nextPlayer = this.gameState.player === "white" ? "black" : "white";
       this.gameState.player = nextPlayer;
 
@@ -139,13 +142,13 @@ class ChessGame {
 
         // Select all legal moves
         const legalMoves = this.getLegalMovesWithCheckFilter(row, col);
-        legalMoves.forEach((move) => {
+        for (const legalMove of legalMoves) {
           const legalSquare = document.querySelector(
-            `.s${move.toRow}x${move.toCol}`,
+            `.s${legalMove.toRow}x${legalMove.toCol}`,
           );
           legalSquare.classList.add("legal-move");
-          legalSquare.dataset.move = JSON.stringify(move);
-        });
+          legalSquare.dataset.move = JSON.stringify(legalMove);
+        }
       }
     }
   }
@@ -210,6 +213,7 @@ class ChessGame {
       }
     }
 
+    // Move the rook if castling
     if (move.castling) {
       this.setPiece(move.castling.fromRow, move.castling.fromCol, null);
       this.setPiece(
@@ -233,6 +237,7 @@ class ChessGame {
     const piece = this.getPiece(row, col);
     const color = this.getColor(piece);
 
+    // Filter only moves that don't end in check.
     return candidateMoves.filter((move) => {
       const tempGameState = structuredClone(this.gameState);
       this.makeMove(move);
@@ -259,6 +264,7 @@ class ChessGame {
         // Direction the pawn moves.
         const offset = color === "white" ? -1 : 1;
         // If moving to rows 7 or 0, become a queen.
+        // Could be refactored later to allow selecting a different piece.
         const pawnPiece =
           row + offset === 7 || row + offset === 0
             ? color === "white"
@@ -267,7 +273,7 @@ class ChessGame {
             : piece;
         if (this.isEmpty(row + offset, col)) {
           legalMoves.push(new Move(row, col, row + offset, col, pawnPiece));
-          // If two squares are empty and the pawn is on the starting row
+          // Move two spaces if on the starting row.
           if (
             this.isEmpty(row + offset * 2, col) &&
             ((color === "white" && row === 6) ||
@@ -280,7 +286,7 @@ class ChessGame {
             );
           }
         }
-        // Capturing
+        // Move diagonally only if capturing.
         const diagonalColumns = [col - 1, col + 1];
         const opponentColor = color === "white" ? "black" : "white";
 
@@ -811,3 +817,5 @@ class ChessGame {
 
 let chessGame = new ChessGame(document.querySelector("#two-player").checked);
 console.log(chessGame);
+
+// lets find out what to do next
