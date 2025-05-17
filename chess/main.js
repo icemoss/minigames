@@ -33,6 +33,8 @@ class ChessGame {
       castleWhiteKingside: true,
       castleWhiteQueenside: true,
     };
+    this.occuredPositions = {};
+    this.occuredPositions[JSON.stringify(this.gameState)] = 1
     this.renderBoard();
     this.addEventListeners();
   }
@@ -535,6 +537,20 @@ class ChessGame {
       setTimeout(() => {
         alert("Stalemate! It is a draw!");
       }, 50);
+    } else {
+      const position = JSON.stringify(this.gameState);
+      if (this.occuredPositions[position]) {
+        this.occuredPositions[position]++;
+        if (this.occuredPositions[position] >= 3) {
+          console.log("repetition");
+          this.active = false;
+          setTimeout(() => {
+            alert("Draw by repetition!");
+          }, 50);
+        }
+      } else {
+        this.occuredPositions[position] = 1
+      }
     }
   }
 
@@ -817,5 +833,3 @@ class ChessGame {
 
 let chessGame = new ChessGame(document.querySelector("#two-player").checked);
 console.log(chessGame);
-
-// lets find out what to do next
