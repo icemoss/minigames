@@ -748,6 +748,7 @@ class ChessGame {
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
         if (this.getPiece(row, col) === piece) {
+          console.log(color, "king at", row, col);
           return { row, col };
         }
       }
@@ -834,7 +835,36 @@ class ChessGame {
       }
     }
 
-    return true;
+    if (
+      color === "white" &&
+      side === "kingside" &&
+      this.gameState.castleWhiteKingside
+    ) {
+      return true;
+    }
+    if (
+      color === "white" &&
+      side === "queenside" &&
+      this.gameState.castleWhiteQueenside
+    ) {
+      return true;
+    }
+    if (
+      color === "black" &&
+      side === "kingside" &&
+      this.gameState.castleBlackKingside
+    ) {
+      return true;
+    }
+    if (
+      color === "white" &&
+      side === "queenside" &&
+      this.gameState.castleWhiteQueenside
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   isSquareAttackedForCastling(targetRow, targetCol, byColor) {
