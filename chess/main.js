@@ -118,7 +118,6 @@ class ChessGame {
       this.gameState.player = nextPlayer;
 
       this.renderBoard();
-      console.log(this.evaluateBoard());
 
       this.checkEnd(nextPlayer, move);
 
@@ -130,9 +129,8 @@ class ChessGame {
         this.gameState.player = aiNextPlayer;
 
         this.renderBoard();
-        console.log(this.evaluateBoard());
 
-        this.checkEnd(aiNextPlayer, randomMove);
+        this.checkEnd(aiNextPlayer, aiMove);
       }
     } else {
       this.deselectAllSquares();
@@ -592,29 +590,117 @@ class ChessGame {
 
   evaluateBoard() {
     const pieceValues = {
-      pawn: 1,
-      knight: 3.05,
-      bishop: 3.25,
-      rook: 5.63,
-      queen: 9.5,
-      king: 20,
+      pawn: 100,
+      knight: 305,
+      bishop: 325,
+      rook: 563,
+      queen: 950,
+      king: 10000,
     };
+    const pawnTable = [
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [50, 50, 50, 50, 50, 50, 50, 50],
+      [10, 10, 20, 30, 30, 20, 10, 10],
+      [5, 5, 10, 25, 25, 10, 5, 5],
+      [0, 0, 0, 20, 20, 0, 0, 0],
+      [5, -5, -10, 0, 0, -10, -5, 5],
+      [5, 10, 10, -20, -20, 10, 10, 5],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+
+    const knightTable = [
+      [-50, -40, -30, -30, -30, -30, -40, -50],
+      [-40, -20, 0, 0, 0, 0, -20, -40],
+      [-30, 0, 10, 15, 15, 10, 0, -30],
+      [-30, 5, 15, 20, 20, 15, 5, -30],
+      [-30, 0, 15, 20, 20, 15, 0, -30],
+      [-30, 5, 10, 15, 15, 10, 5, -30],
+      [-40, -20, 0, 5, 5, 0, -20, -40],
+      [-50, -40, -30, -30, -30, -30, -40, -50],
+    ];
+
+    const bishopTable = [
+      [-20, -10, -10, -10, -10, -10, -10, -20],
+      [-10, 0, 0, 0, 0, 0, 0, -10],
+      [-10, 0, 10, 10, 10, 10, 0, -10],
+      [-10, 5, 5, 10, 10, 5, 5, -10],
+      [-10, 0, 5, 10, 10, 5, 0, -10],
+      [-10, 10, 10, 10, 10, 10, 10, -10],
+      [-10, 5, 0, 0, 0, 0, 5, -10],
+      [-20, -10, -10, -10, -10, -10, -10, -20],
+    ];
+
+    const rookTable = [
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [5, 10, 10, 10, 10, 10, 10, 5],
+      [-5, 0, 0, 0, 0, 0, 0, -5],
+      [-5, 0, 0, 0, 0, 0, 0, -5],
+      [-5, 0, 0, 0, 0, 0, 0, -5],
+      [-5, 0, 0, 0, 0, 0, 0, -5],
+      [-5, 0, 0, 0, 0, 0, 0, -5],
+      [0, 0, 0, 5, 5, 0, 0, 0],
+    ];
+
+    const queenTable = [
+      [-20, -10, -10, -5, -5, -10, -10, -20],
+      [-10, 0, 0, 0, 0, 0, 0, -10],
+      [-10, 0, 5, 5, 5, 5, 0, -10],
+      [-5, 0, 5, 5, 5, 5, 0, -5],
+      [0, 0, 5, 5, 5, 5, 0, -5],
+      [-10, 5, 5, 5, 5, 5, 0, -10],
+      [-10, 0, 5, 0, 0, 0, 0, -10],
+      [-20, -10, -10, -5, -5, -10, -10, -20],
+    ];
+    const kingTable = [
+      [-30, -40, -40, -50, -50, -40, -40, -30],
+      [-30, -40, -40, -50, -50, -40, -40, -30],
+      [-30, -40, -40, -50, -50, -40, -40, -30],
+      [-30, -40, -40, -50, -50, -40, -40, -30],
+      [-20, -30, -30, -40, -40, -30, -30, -20],
+      [-10, -20, -20, -20, -20, -20, -20, -10],
+      [20, 20, 0, 0, 0, 0, 20, 20],
+      [20, 30, 10, 0, 0, 10, 30, 20],
+    ];
     // Black negative, white positive.
     let evaluation = 0;
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
         const piece = this.getPiece(row, col);
+        if (!piece) continue;
         const color = this.getColor(piece);
+        const pieceType = this.pieces[piece];
+        const pieceValue = pieceValues[pieceType];
         if (color === "white") {
-          evaluation += pieceValues[this.pieces[piece]];
-        } else if (color === "black") {
-          evaluation -= pieceValues[this.pieces[piece]];
+          evaluation += pieceValue;
+        } else {
+          evaluation -= pieceValue;
         }
+
+        const accessRow = color === "white" ? row : 7 - row;
+
+        let positionValue = 0;
+        if (pieceType === "pawn") {
+          positionValue = pawnTable[accessRow][col];
+        } else if (pieceType === "knight") {
+          positionValue = knightTable[accessRow][col];
+        } else if (pieceType === "rook") {
+          positionValue = rookTable[accessRow][col];
+        } else if (pieceType === "queen") {
+          positionValue = queenTable[accessRow][col];
+        } else if (pieceType === "king") {
+          positionValue = kingTable[accessRow][col];
+        }
+
+        evaluation += positionValue;
       }
     }
-    if (this.isInCheck("white")) evaluation -= 2;
-    if (this.isInCheck("black")) evaluation += 2;
+    if (this.isInCheck("white")) evaluation -= 50;
+    if (this.isInCheck("black")) evaluation += 50;
+
+    // Slightly randomise evaluation.
+    evaluation += (Math.random() - 0.5) / 5;
     return evaluation;
+    // Needs improvement still
   }
 
   generateAiMove(color) {
