@@ -748,7 +748,6 @@ class ChessGame {
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
         if (this.getPiece(row, col) === piece) {
-          console.log(color, "king at", row, col);
           return { row, col };
         }
       }
@@ -857,9 +856,9 @@ class ChessGame {
       return true;
     }
     if (
-      color === "white" &&
+      color === "black" &&
       side === "queenside" &&
-      this.gameState.castleWhiteQueenside
+      this.gameState.castleBlackQueenside
     ) {
       return true;
     }
