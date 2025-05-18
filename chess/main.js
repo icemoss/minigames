@@ -71,6 +71,31 @@ class ChessGame {
         this.board.append(square);
       }
     }
+
+    // Re-apply selection state if needed
+    if (this.selectedPiece) {
+      const selectedSquare = document.querySelector(
+        `.s${this.selectedPiece.row}x${this.selectedPiece.col}`,
+      );
+      if (selectedSquare) {
+        selectedSquare.classList.add("selected");
+
+        // Re-highlight legal moves
+        const legalMoves = this.getLegalMovesWithCheckFilter(
+          this.selectedPiece.row,
+          this.selectedPiece.col,
+        );
+        for (const legalMove of legalMoves) {
+          const legalSquare = document.querySelector(
+            `.s${legalMove.toRow}x${legalMove.toCol}`,
+          );
+          if (legalSquare) {
+            legalSquare.classList.add("legal-move");
+            legalSquare.dataset.move = JSON.stringify(legalMove);
+          }
+        }
+      }
+    }
   }
 
   addEventListeners() {
@@ -94,6 +119,7 @@ class ChessGame {
 
   reset() {
     this.selectedPiece = null;
+    this.active = true;
     this.gameState = {
       player: "white",
       boardState: this.createInitialBoardState(), // 2D array [row][col]
@@ -103,6 +129,9 @@ class ChessGame {
       castleWhiteKingside: true,
       castleWhiteQueenside: true,
     };
+    this.turnsSinceLastEvent = 0;
+    this.occuredPositions = {};
+    this.occuredPositions[JSON.stringify(this.gameState)] = 1;
     this.renderBoard();
   }
 
@@ -112,6 +141,7 @@ class ChessGame {
       // Data for moves are stored in the dataset
       const move = JSON.parse(square.dataset.move);
       this.makeMove(move);
+      this.selectedPiece = null;
 
       // Toggle player
       const nextPlayer = this.gameState.player === "white" ? "black" : "white";
@@ -133,39 +163,22 @@ class ChessGame {
         this.checkEnd(aiNextPlayer, aiMove);
       }
     } else {
-      this.deselectAllSquares();
-      // Deselect if clicked the same square or a square of a different color
-      if (
-        (this.selectedPiece?.row === row && this.selectedPiece?.col === col) ||
-        this.getColor(square.textContent) !== this.gameState.player
-      ) {
+      // If clicking the same piece that was already selected, deselect it
+      if (this.selectedPiece?.row === row && this.selectedPiece?.col === col) {
         this.selectedPiece = null;
-      } else {
-        this.selectedPiece = { row, col };
-        square.classList.add("selected");
-
-        // Select all legal moves
-        const legalMoves = this.getLegalMovesWithCheckFilter(row, col);
-        for (const legalMove of legalMoves) {
-          const legalSquare = document.querySelector(
-            `.s${legalMove.toRow}x${legalMove.toCol}`,
-          );
-          legalSquare.classList.add("legal-move");
-          legalSquare.dataset.move = JSON.stringify(legalMove);
-        }
       }
-    }
-  }
+      // If clicking a piece of the wrong color, do nothing
+      else if (this.getColor(square.textContent) !== this.gameState.player) {
+        this.selectedPiece = null;
+      }
+      // Otherwise, select the new piece
+      else {
+        this.selectedPiece = { row, col };
+      }
 
-  deselectAllSquares() {
-    // Deselect all selected squares
-    document.querySelectorAll(".selected").forEach((square) => {
-      square.classList.remove("selected");
-    });
-    // Deselect all .legal-move
-    document.querySelectorAll(".legal-move").forEach((square) => {
-      square.classList.remove("legal-move");
-    });
+      // Re-render the board to show the updated selection state
+      this.renderBoard();
+    }
   }
 
   isEmpty(row, col) {
@@ -233,7 +246,6 @@ class ChessGame {
     } else {
       this.gameState.enPassant = null;
     }
-    this.selectedPiece = null;
   }
 
   getLegalMovesWithCheckFilter(row, col) {
@@ -595,7 +607,7 @@ class ChessGame {
       bishop: 325,
       rook: 563,
       queen: 950,
-      king: 10000,
+      king: 100000,
     };
     const pawnTable = [
       [0, 0, 0, 0, 0, 0, 0, 0],
@@ -683,6 +695,8 @@ class ChessGame {
           positionValue = pawnTable[accessRow][col];
         } else if (pieceType === "knight") {
           positionValue = knightTable[accessRow][col];
+        } else if (pieceType === "bishop") {
+          positionValue = bishopTable[accessRow][col];
         } else if (pieceType === "rook") {
           positionValue = rookTable[accessRow][col];
         } else if (pieceType === "queen") {
@@ -700,13 +714,10 @@ class ChessGame {
     // Slightly randomise evaluation.
     evaluation += (Math.random() - 0.5) / 5;
     return evaluation;
-    // Needs improvement still
   }
 
   generateAiMove(color) {
-    const moves = this.generateAllMoves(color);
-    const move = this.chooseBestMove(moves, color);
-    return move;
+    return this.findBestMove(color);
   }
 
   generateAllMoves(color) {
@@ -723,21 +734,61 @@ class ChessGame {
     return moves;
   }
 
-  chooseBestMove(moves, color) {
+  findBestMove(color) {
+    const allPossibleMoves = this.generateAllMoves(color);
+
+    if (allPossibleMoves.length === 0) return null;
+
     // White optimises for high eval, black for low
     let bestEvaluation = color === "white" ? -Infinity : Infinity;
     let bestMove = null;
-    for (const move of moves) {
+
+    const opponentColor = color === "white" ? "black" : "white";
+
+    for (const move of allPossibleMoves) {
       const tempGameState = structuredClone(this.gameState);
       this.makeMove(move);
-      const evaluation = this.evaluateBoard();
-      if (
-        (color === "white" && evaluation > bestEvaluation) ||
-        (color === "black" && evaluation < bestEvaluation)
-      ) {
-        bestEvaluation = evaluation;
-        bestMove = move;
+
+      const opponentMoves = this.generateAllMoves(opponentColor);
+
+      if (opponentMoves.length === 0) {
+        const evaluation = this.evaluateBoard();
+        if (
+          (color === "white" && evaluation > bestEvaluation) ||
+          (color === "black" && evaluation < bestEvaluation)
+        ) {
+          bestEvaluation = evaluation;
+          bestMove = move;
+        }
+      } else {
+        let bestOpponentEvaluation =
+          opponentColor === "white" ? -Infinity : Infinity;
+
+        for (const opponentMove of opponentMoves) {
+          const afterAIMoveState = structuredClone(this.gameState);
+          this.makeMove(opponentMove);
+          const evaluation = this.evaluateBoard();
+
+          if (
+            (opponentColor === "white" &&
+              evaluation > bestOpponentEvaluation) ||
+            (opponentColor === "black" && evaluation < bestOpponentEvaluation)
+          ) {
+            bestOpponentEvaluation = evaluation;
+          }
+
+          this.gameState = afterAIMoveState;
+        }
+
+        if (
+          (color === "white" && bestOpponentEvaluation > bestEvaluation) ||
+          (color === "black" && bestOpponentEvaluation < bestEvaluation)
+        ) {
+          bestEvaluation = bestOpponentEvaluation;
+          bestMove = move;
+        }
       }
+
       this.gameState = tempGameState;
     }
     return bestMove;
