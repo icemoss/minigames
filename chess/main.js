@@ -22,6 +22,7 @@ class ChessGame {
       "♟": "pawn",
     };
     this.selectedPiece = null;
+    this.lastMove = null; // { fromRow, fromCol, toRow, toCol }
     this.twoPlayer = twoPlayer;
     this.active = true;
     this.gameState = {
@@ -96,6 +97,21 @@ class ChessGame {
         }
       }
     }
+
+    if (this.lastMove) {
+      const fromSquare = document.querySelector(
+        `.s${this.lastMove.fromRow}x${this.lastMove.fromCol}`,
+      );
+      if (fromSquare) {
+        fromSquare.classList.add("last-move");
+      }
+      const toSquare = document.querySelector(
+        `.s${this.lastMove.toRow}x${this.lastMove.toCol}`,
+      );
+      if (toSquare) {
+        toSquare.classList.add("last-move");
+      }
+    }
   }
 
   addEventListeners() {
@@ -141,6 +157,12 @@ class ChessGame {
       // Data for moves are stored in the dataset
       const move = JSON.parse(square.dataset.move);
       this.makeMove(move);
+      this.lastMove = {
+        fromCol: move.fromCol,
+        fromRow: move.fromRow,
+        toCol: move.toCol,
+        toRow: move.toRow,
+      };
       this.selectedPiece = null;
 
       // Toggle player
@@ -154,6 +176,12 @@ class ChessGame {
       if (!this.twoPlayer && this.active) {
         const aiMove = this.generateAiMove(nextPlayer);
         this.makeMove(aiMove);
+        this.lastMove = {
+          fromCol: aiMove.fromCol,
+          fromRow: aiMove.fromRow,
+          toCol: aiMove.toCol,
+          toRow: aiMove.toRow,
+        };
         const aiNextPlayer =
           this.gameState.player === "white" ? "black" : "white";
         this.gameState.player = aiNextPlayer;

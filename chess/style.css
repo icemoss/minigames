@@ -46,6 +46,10 @@ main {
     background-color: orange;
 }
 
+.last-move {
+    background-color: aqua;
+}
+
 #reset {
     font-size: 2rem;
     height: 3rem;
