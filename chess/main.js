@@ -135,6 +135,7 @@ class ChessGame {
 
   reset() {
     this.selectedPiece = null;
+    this.lastMove = null; // { fromRow, fromCol, toRow, toCol }
     this.active = true;
     this.gameState = {
       player: "white",
@@ -710,11 +711,6 @@ class ChessGame {
         const color = this.getColor(piece);
         const pieceType = this.pieces[piece];
         const pieceValue = pieceValues[pieceType];
-        if (color === "white") {
-          evaluation += pieceValue;
-        } else {
-          evaluation -= pieceValue;
-        }
 
         const accessRow = color === "white" ? row : 7 - row;
 
@@ -733,14 +729,26 @@ class ChessGame {
           positionValue = kingTable[accessRow][col];
         }
 
-        evaluation += positionValue;
+        const movesValue = this.getLegalMoves(row, col).length * 20;
+
+        if (color === "white") {
+          evaluation += pieceValue;
+          evaluation += positionValue;
+          evaluation += movesValue;
+        } else {
+          evaluation -= pieceValue;
+          evaluation -= positionValue;
+          evaluation -= movesValue;
+        }
       }
     }
-    if (this.isInCheck("white")) evaluation -= 50;
-    if (this.isInCheck("black")) evaluation += 50;
+    if (this.isInCheck("white")) evaluation -= 500;
+    if (this.isInCheck("black")) evaluation += 500;
+    if (this.isCheckmate("white")) evaluation -= 5000000;
+    if (this.isCheckmate("black")) evaluation += 5000000;
 
     // Slightly randomise evaluation.
-    evaluation += (Math.random() - 0.5) / 5;
+    evaluation += (Math.random() - 0.5);
     return evaluation;
   }
 
