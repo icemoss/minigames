@@ -129,7 +129,7 @@ class ChessGame {
     });
     document.querySelector("#two-player").addEventListener("change", (e) => {
       this.twoPlayer = e.target.checked;
-      this.reset();
+      // this.reset();
     });
   }
 
@@ -183,13 +183,12 @@ class ChessGame {
           toCol: aiMove.toCol,
           toRow: aiMove.toRow,
         };
-        const aiNextPlayer =
-          this.gameState.player === "white" ? "black" : "white";
-        this.gameState.player = aiNextPlayer;
+        const humanPlayer = nextPlayer === "white" ? "black" : "white";
+        this.gameState.player = humanPlayer;
 
         this.renderBoard();
 
-        this.checkEnd(aiNextPlayer, aiMove);
+        this.checkEnd(humanPlayer, aiMove);
       }
     } else {
       // If clicking the same piece that was already selected, deselect it
@@ -567,6 +566,17 @@ class ChessGame {
     return !this.areLegalMovesAvailable(color);
   }
 
+  isDrawByRepetition() {
+    const position = JSON.stringify(this.gameState);
+    return (
+      this.occuredPositions[position] && this.occuredPositions[position] >= 2
+    );
+  }
+
+  is50MoveRule() {
+    return this.turnsSinceLastEvent >= 99;
+  }
+
   checkEnd(nextPlayer, move) {
     if (this.isCheckmate(nextPlayer)) {
       console.log("checkmate");
@@ -581,34 +591,34 @@ class ChessGame {
         alert("Stalemate! It is a draw!");
       }, 50);
     } else {
-      const position = JSON.stringify(this.gameState);
-      if (this.occuredPositions[position]) {
-        this.occuredPositions[position]++;
-        if (this.occuredPositions[position] >= 3) {
-          console.log("repetition");
-          this.active = false;
-          setTimeout(() => {
-            alert("Draw by repetition!");
-          }, 50);
-        }
-      } else {
-        this.occuredPositions[position] = 1;
-      }
-      if (
+      const isIrreversibleMove =
         this.pieces[move.piece] === "pawn" ||
-        (move.capturedRow !== null && move.capturedCol !== null)
-      ) {
+        (move.capturedRow !== null && move.capturedCol !== null);
+      if (isIrreversibleMove) {
         this.turnsSinceLastEvent = 0;
+        this.occuredPositions = null;
+        this.occuredPositions = {};
+        console.log("irreversible move", this.occuredPositions);
       } else {
-        // 50 move repetition from each player, 100 in total
-        if (++this.turnsSinceLastEvent >= 100) {
-          console.log("50 move rule");
-          this.active = false;
-          setTimeout(() => {
-            alert("Draw by 50 move rule!");
-          }, 50);
-        }
+        this.turnsSinceLastEvent++;
       }
+
+      if (this.isDrawByRepetition()) {
+        console.log("repetition");
+        this.active = false;
+        setTimeout(() => {
+          alert("Draw by repetition!");
+        }, 50);
+      } else if (this.is50MoveRule()) {
+        console.log("50 move rule");
+        this.active = false;
+        setTimeout(() => {
+          alert("Draw by 50 move rule!");
+        }, 50);
+      }
+      const position = JSON.stringify(this.gameState);
+      this.occuredPositions[position] =
+        (this.occuredPositions[position] || 0) + 1;
     }
   }
 
@@ -642,8 +652,8 @@ class ChessGame {
       [0, 0, 0, 0, 0, 0, 0, 0],
       [50, 50, 50, 50, 50, 50, 50, 50],
       [10, 10, 20, 30, 30, 20, 10, 10],
-      [5, 5, 10, 25, 25, 10, 5, 5],
-      [0, 0, 0, 20, 20, 0, 0, 0],
+      [5, 5, 10, 55, 55, 10, 5, 5],
+      [0, 0, 0, 50, 50, 0, 0, 0],
       [5, -5, -10, 0, 0, -10, -5, 5],
       [5, 10, 10, -20, -20, 10, 10, 5],
       [0, 0, 0, 0, 0, 0, 0, 0],
@@ -699,8 +709,8 @@ class ChessGame {
       [-30, -40, -40, -50, -50, -40, -40, -30],
       [-20, -30, -30, -40, -40, -30, -30, -20],
       [-10, -20, -20, -20, -20, -20, -20, -10],
-      [20, 20, 0, 0, 0, 0, 20, 20],
-      [20, 30, 10, 0, 0, 10, 30, 20],
+      [30, 30, 0, 0, 0, 0, 30, 30],
+      [50, 100, 80, 0, 0, 10, 100, 50],
     ];
     // Black negative, white positive.
     let evaluation = 0;
@@ -711,44 +721,82 @@ class ChessGame {
         const color = this.getColor(piece);
         const pieceType = this.pieces[piece];
         const pieceValue = pieceValues[pieceType];
+        const legalMovesTotal = this.getLegalMoves(row, col).length;
 
         const accessRow = color === "white" ? row : 7 - row;
+        const accessCol = color === "white" ? col : 7 - col;
 
         let positionValue = 0;
         if (pieceType === "pawn") {
-          positionValue = pawnTable[accessRow][col];
+          positionValue = pawnTable[accessRow][accessCol];
+          let samePawnFile = false;
+          for (let checkRow = 0; checkRow < 8; checkRow++) {
+            if (checkRow !== row) {
+              const piece = this.getPiece(checkRow, accessCol);
+              if (
+                piece &&
+                this.pieces[piece] === "pawn" &&
+                this.getColor(piece) === color
+              ) {
+                samePawnFile = true;
+                break;
+              }
+            }
+          }
+          if (samePawnFile) positionValue -= 25;
         } else if (pieceType === "knight") {
-          positionValue = knightTable[accessRow][col];
+          positionValue = knightTable[accessRow][accessCol];
         } else if (pieceType === "bishop") {
-          positionValue = bishopTable[accessRow][col];
+          positionValue = bishopTable[accessRow][accessCol];
         } else if (pieceType === "rook") {
-          positionValue = rookTable[accessRow][col];
+          positionValue = rookTable[accessRow][accessCol];
         } else if (pieceType === "queen") {
-          positionValue = queenTable[accessRow][col];
+          positionValue = queenTable[accessRow][accessCol];
         } else if (pieceType === "king") {
-          positionValue = kingTable[accessRow][col];
+          positionValue = kingTable[accessRow][accessCol];
+          if (legalMovesTotal < 3) positionValue += 80;
         }
 
-        const movesValue = this.getLegalMoves(row, col).length * 20;
+        let movesValue = legalMovesTotal * 20;
+        if (pieceType === "queen") {
+          movesValue = legalMovesTotal * 3;
+        }
+        if (pieceType === "rook" || pieceType === "bishop") {
+          movesValue = legalMovesTotal * 5;
+        }
 
         if (color === "white") {
           evaluation += pieceValue;
           evaluation += positionValue;
           evaluation += movesValue;
+          if (
+            this.gameState.castleWhiteKingside ||
+            this.gameState.castleWhiteQueenside
+          )
+            evaluation += 30;
         } else {
           evaluation -= pieceValue;
           evaluation -= positionValue;
           evaluation -= movesValue;
+          if (
+            this.gameState.castleBlackKingside ||
+            this.gameState.castleBlackQueenside
+          )
+            evaluation -= 30;
         }
       }
     }
-    if (this.isInCheck("white")) evaluation -= 500;
-    if (this.isInCheck("black")) evaluation += 500;
+    if (this.isInCheck("white")) evaluation -= 50;
+    if (this.isInCheck("black")) evaluation += 50;
     if (this.isCheckmate("white")) evaluation -= 5000000;
     if (this.isCheckmate("black")) evaluation += 5000000;
 
+    if (this.isStalemate("white")) evaluation = 0;
+    if (this.isStalemate("black")) evaluation = 0;
+    if (this.isDrawByRepetition()) evaluation = 0;
+    if (this.is50MoveRule()) evaluation = 0;
     // Slightly randomise evaluation.
-    evaluation += (Math.random() - 0.5);
+    evaluation += (Math.random() - 0.5) * 5;
     return evaluation;
   }
 
