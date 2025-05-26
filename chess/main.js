@@ -598,7 +598,6 @@ class ChessGame {
         this.turnsSinceLastEvent = 0;
         this.occuredPositions = null;
         this.occuredPositions = {};
-        console.log("irreversible move", this.occuredPositions);
       } else {
         this.turnsSinceLastEvent++;
       }
@@ -642,18 +641,19 @@ class ChessGame {
   evaluateBoard() {
     const pieceValues = {
       pawn: 100,
-      knight: 305,
-      bishop: 325,
-      rook: 563,
-      queen: 950,
+      knight: 320,
+      bishop: 330,
+      rook: 500,
+      queen: 900,
       king: 100000,
     };
+
     const pawnTable = [
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [50, 50, 50, 50, 50, 50, 50, 50],
-      [10, 10, 20, 30, 30, 20, 10, 10],
-      [5, 5, 10, 55, 55, 10, 5, 5],
-      [0, 0, 0, 50, 50, 0, 0, 0],
+      [80, 80, 80, 80, 80, 80, 80, 80],
+      [25, 25, 30, 40, 40, 30, 25, 25],
+      [10, 10, 15, 35, 35, 15, 10, 10],
+      [5, 5, 10, 25, 25, 10, 5, 5],
       [5, -5, -10, 0, 0, -10, -5, 5],
       [5, 10, 10, -20, -20, 10, 10, 5],
       [0, 0, 0, 0, 0, 0, 0, 0],
@@ -661,47 +661,48 @@ class ChessGame {
 
     const knightTable = [
       [-50, -40, -30, -30, -30, -30, -40, -50],
-      [-40, -20, 0, 0, 0, 0, -20, -40],
-      [-30, 0, 10, 15, 15, 10, 0, -30],
+      [-40, -20, 0, 5, 5, 0, -20, -40],
       [-30, 5, 15, 20, 20, 15, 5, -30],
-      [-30, 0, 15, 20, 20, 15, 0, -30],
-      [-30, 5, 10, 15, 15, 10, 5, -30],
+      [-30, 10, 20, 30, 30, 20, 10, -30],
+      [-30, 5, 20, 25, 25, 20, 5, -30],
+      [-30, 5, 15, 20, 20, 15, 5, -30],
       [-40, -20, 0, 5, 5, 0, -20, -40],
       [-50, -40, -30, -30, -30, -30, -40, -50],
     ];
 
     const bishopTable = [
       [-20, -10, -10, -10, -10, -10, -10, -20],
-      [-10, 0, 0, 0, 0, 0, 0, -10],
-      [-10, 0, 10, 10, 10, 10, 0, -10],
-      [-10, 5, 5, 10, 10, 5, 5, -10],
-      [-10, 0, 5, 10, 10, 5, 0, -10],
-      [-10, 10, 10, 10, 10, 10, 10, -10],
+      [-10, 5, 0, 0, 0, 0, 5, -10],
+      [-10, 10, 15, 15, 15, 15, 10, -10],
+      [-10, 5, 10, 15, 15, 10, 5, -10],
+      [-10, 0, 10, 15, 15, 10, 0, -10],
+      [-10, 10, 10, 15, 15, 10, 10, -10],
       [-10, 5, 0, 0, 0, 0, 5, -10],
       [-20, -10, -10, -10, -10, -10, -10, -20],
     ];
 
     const rookTable = [
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [5, 10, 10, 10, 10, 10, 10, 5],
-      [-5, 0, 0, 0, 0, 0, 0, -5],
-      [-5, 0, 0, 0, 0, 0, 0, -5],
-      [-5, 0, 0, 0, 0, 0, 0, -5],
-      [-5, 0, 0, 0, 0, 0, 0, -5],
-      [-5, 0, 0, 0, 0, 0, 0, -5],
-      [0, 0, 0, 5, 5, 0, 0, 0],
+      [25, 25, 25, 25, 25, 25, 25, 25],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [5, 5, 5, 5, 5, 5, 5, 5],
+      [10, 10, 10, 15, 15, 10, 10, 10],
     ];
 
     const queenTable = [
       [-20, -10, -10, -5, -5, -10, -10, -20],
-      [-10, 0, 0, 0, 0, 0, 0, -10],
-      [-10, 0, 5, 5, 5, 5, 0, -10],
-      [-5, 0, 5, 5, 5, 5, 0, -5],
-      [0, 0, 5, 5, 5, 5, 0, -5],
-      [-10, 5, 5, 5, 5, 5, 0, -10],
-      [-10, 0, 5, 0, 0, 0, 0, -10],
+      [-40, -30, -20, -15, -15, -20, -30, -40],
+      [-30, -20, -10, -5, -5, -10, -20, -30],
+      [-20, -10, 0, 5, 5, 0, -10, -20],
+      [-10, -5, 5, 10, 10, 5, -5, -10],
+      [-10, 0, 5, 10, 10, 5, 0, -10],
+      [-20, -10, 0, 0, 0, 0, -10, -20],
       [-20, -10, -10, -5, -5, -10, -10, -20],
     ];
+
     const kingTable = [
       [-30, -40, -40, -50, -50, -40, -40, -30],
       [-30, -40, -40, -50, -50, -40, -40, -30],
@@ -709,10 +710,10 @@ class ChessGame {
       [-30, -40, -40, -50, -50, -40, -40, -30],
       [-20, -30, -30, -40, -40, -30, -30, -20],
       [-10, -20, -20, -20, -20, -20, -20, -10],
-      [30, 30, 0, 0, 0, 0, 30, 30],
-      [50, 100, 80, 0, 0, 10, 100, 50],
+      [50, 50, 15, 5, 5, 15, 50, 50],
+      [60, 80, 70, 10, 10, 20, 80, 60],
     ];
-    // Black negative, white positive.
+
     let evaluation = 0;
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
@@ -743,7 +744,7 @@ class ChessGame {
               }
             }
           }
-          if (samePawnFile) positionValue -= 25;
+          if (samePawnFile) positionValue -= 40;
         } else if (pieceType === "knight") {
           positionValue = knightTable[accessRow][accessCol];
         } else if (pieceType === "bishop") {
@@ -754,15 +755,29 @@ class ChessGame {
           positionValue = queenTable[accessRow][accessCol];
         } else if (pieceType === "king") {
           positionValue = kingTable[accessRow][accessCol];
-          if (legalMovesTotal < 3) positionValue += 80;
+          if (legalMovesTotal < 3) positionValue += 120;
         }
 
-        let movesValue = legalMovesTotal * 20;
-        if (pieceType === "queen") {
-          movesValue = legalMovesTotal * 3;
-        }
-        if (pieceType === "rook" || pieceType === "bishop") {
-          movesValue = legalMovesTotal * 5;
+        let movesValue = 0;
+        switch (pieceType) {
+          case "pawn":
+            movesValue = legalMovesTotal * 8;
+            break;
+          case "knight":
+            movesValue = legalMovesTotal * 15;
+            break;
+          case "bishop":
+            movesValue = legalMovesTotal * 12;
+            break;
+          case "rook":
+            movesValue = legalMovesTotal * 10;
+            break;
+          case "queen":
+            movesValue = legalMovesTotal * 6;
+            break;
+          case "king":
+            movesValue = legalMovesTotal * 25;
+            break;
         }
 
         if (color === "white") {
@@ -773,7 +788,7 @@ class ChessGame {
             this.gameState.castleWhiteKingside ||
             this.gameState.castleWhiteQueenside
           )
-            evaluation += 30;
+            evaluation += 50;
         } else {
           evaluation -= pieceValue;
           evaluation -= positionValue;
@@ -782,21 +797,21 @@ class ChessGame {
             this.gameState.castleBlackKingside ||
             this.gameState.castleBlackQueenside
           )
-            evaluation -= 30;
+            evaluation -= 50;
         }
       }
     }
-    if (this.isInCheck("white")) evaluation -= 50;
-    if (this.isInCheck("black")) evaluation += 50;
-    if (this.isCheckmate("white")) evaluation -= 5000000;
-    if (this.isCheckmate("black")) evaluation += 5000000;
+    if (this.isInCheck("white")) evaluation -= 75;
+    if (this.isInCheck("black")) evaluation += 75;
+    if (this.isCheckmate("white")) evaluation -= 1000000000;
+    if (this.isCheckmate("black")) evaluation += 1000000000;
 
     if (this.isStalemate("white")) evaluation = 0;
     if (this.isStalemate("black")) evaluation = 0;
     if (this.isDrawByRepetition()) evaluation = 0;
     if (this.is50MoveRule()) evaluation = 0;
     // Slightly randomise evaluation.
-    evaluation += (Math.random() - 0.5) * 5;
+    evaluation += Math.random() - 0.5;
     return evaluation;
   }
 
