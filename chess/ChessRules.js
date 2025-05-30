@@ -287,7 +287,6 @@ export class ChessRules {
     return this.getSlidingMoves(row, col, piece, color, directions, gameState);
   }
 
-  // Utility methods (continuing in next part due to length)
   static getLeapingMoves(row, col, piece, color, directions, gameState) {
     const moves = [];
     for (const [drow, dcol] of directions) {
@@ -320,8 +319,6 @@ export class ChessRules {
           moves.push(new Move(row, col, newRow, newCol, piece));
         } else {
           if (this.getColor(targetPiece) !== color) {
-            // For normal captures, don't set capturedRow/capturedCol
-            // The capture happens naturally when we place our piece at the destination
             moves.push(new Move(row, col, newRow, newCol, piece));
           }
           break;
@@ -330,7 +327,6 @@ export class ChessRules {
     }
     return moves;
   }
-  // Basic utility methods
   static getPiece(row, col, gameState) {
     return gameState.boardState[row]?.[col] || null;
   }

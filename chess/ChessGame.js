@@ -186,7 +186,7 @@ export class ChessGame {
       console.log("Game ended");
     }
   }
-  
+
   /**
    * Reset the game
    */
@@ -222,6 +222,12 @@ export class ChessGame {
 
   updateGameHistory() {
     // TODO: Implement proper history tracking
+    const position = structuredClone(this.gameState);
+    if (this.occurredPositions[position]) {
+      this.occurredPositions[position]++;
+    } else {
+      this.occurredPositions[position] = 1;
+    }
     this.turnsSinceLastEvent++;
   }
 
