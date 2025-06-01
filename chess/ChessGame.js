@@ -4,6 +4,7 @@ import { Move } from "./move.js";
 import { ChessRules } from "./ChessRules.js";
 import { ChessAI } from "./ChessAI.js";
 import { ChessUI } from "./ChessUI.js";
+import { Gamestate } from "./gameState.js";
 import {
   INITIAL_BOARD,
   PIECES,

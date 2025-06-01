@@ -11,11 +11,15 @@ export class Gamestate {
     this.castleBlackQueenside = true;
     this.castleWhiteKingside = true;
     this.castleWhiteQueenside = true;
-    
+
     this.turnsSinceLastEvent = 0;
     this.occurredPositions = {};
     this.occurredPositions[JSON.stringify(this.gameState)] = 1;
   }
-  
-  
+
+  isIdentical(gameState) {
+    console.log(this);
+    console.log(gameState);
+    return JSON.stringify(this) === JSON.stringify(gameState);
+  }
 }
