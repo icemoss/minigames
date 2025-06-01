@@ -5,12 +5,7 @@ import { ChessRules } from "./ChessRules.js";
 import { ChessAI } from "./ChessAI.js";
 import { ChessUI } from "./ChessUI.js";
 import { Gamestate } from "./gameState.js";
-import {
-  INITIAL_BOARD,
-  PIECES,
-  WHITE_PIECES,
-  BLACK_PIECES,
-} from "./constants.js";
+import { PIECES, WHITE_PIECES, BLACK_PIECES } from "./constants.js";
 
 export class ChessGame {
   constructor(boardElement, twoPlayer = false) {
@@ -22,20 +17,9 @@ export class ChessGame {
     this.active = true;
 
     // Game state
-    this.gameState = {
-      player: "white",
-      boardState: structuredClone(INITIAL_BOARD),
-      enPassant: null,
-      castleBlackKingside: true,
-      castleBlackQueenside: true,
-      castleWhiteKingside: true,
-      castleWhiteQueenside: true,
-    };
+    this.gameState = new Gamestate();
 
     // Game history for draw detection
-    this.turnsSinceLastEvent = 0;
-    this.occurredPositions = {};
-    this.occurredPositions[JSON.stringify(this.gameState)] = 1;
 
     // Current move state
     this.selectedPiece = null;
@@ -192,19 +176,8 @@ export class ChessGame {
    * Reset the game
    */
   reset() {
-    this.gameState = {
-      player: "white",
-      boardState: structuredClone(INITIAL_BOARD),
-      enPassant: null,
-      castleBlackKingside: true,
-      castleBlackQueenside: true,
-      castleWhiteKingside: true,
-      castleWhiteQueenside: true,
-    };
+    this.gameState = new Gamestate();
 
-    this.turnsSinceLastEvent = 0;
-    this.occurredPositions = {};
-    this.occurredPositions[JSON.stringify(this.gameState)] = 1;
     this.active = true;
 
     this.clearSelection();
@@ -224,12 +197,12 @@ export class ChessGame {
   updateGameHistory() {
     // TODO: Implement proper history tracking
     const position = structuredClone(this.gameState);
-    if (this.occurredPositions[position]) {
-      this.occurredPositions[position]++;
+    if (this.gameState.occurredPositions[position]) {
+      this.gameState.occurredPositions[position]++;
     } else {
-      this.occurredPositions[position] = 1;
+      this.gameState.occurredPositions[position] = 1;
     }
-    this.turnsSinceLastEvent++;
+    this.gameState.turnsSinceLastEvent++;
   }
 
   isDrawByRepetition() {

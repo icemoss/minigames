@@ -18,8 +18,27 @@ export class Gamestate {
   }
 
   isIdentical(gameState) {
-    console.log(this);
-    console.log(gameState);
-    return JSON.stringify(this) === JSON.stringify(gameState);
+    return (
+      this.player === gameState.player &&
+      JSON.stringify(this.boardState) ===
+        JSON.stringify(gameState.boardState) &&
+      this.enPassant === gameState.enPassant &&
+      this.castleBlackKingside === gameState.castleBlackKingside &&
+      this.castleBlackQueenside === gameState.castleBlackQueenside &&
+      this.castleWhiteKingside === gameState.castleWhiteKingside &&
+      this.castleWhiteQueenside === gameState.castleWhiteQueenside
+    );
+  }
+
+  getPosition() {
+    return {
+      player: this.player,
+      boardState: this.boardState,
+      enPassant: this.enPassant,
+      castleBlackKingside: this.castleBlackKingside,
+      castleBlackQueenside: this.castleBlackQueenside,
+      castleWhiteKingside: this.castleWhiteQueenside,
+      castleWhiteQueenside: this.castleWhiteQueenside,
+    };
   }
 }
