@@ -14,7 +14,7 @@ export class Gamestate {
 
     this.turnsSinceLastEvent = 0;
     this.occurredPositions = {};
-    this.occurredPositions[JSON.stringify(this.gameState)] = 1;
+    this.occurredPositions[JSON.stringify(this.getPosition())] = 1;
   }
 
   isIdentical(gameState) {

@@ -677,4 +677,119 @@ export class ChessRules {
     // If not in check and no legal moves, it's stalemate
     return this.generateAllMoves(color, gameState).length === 0;
   }
+
+  /**
+   * Check for all game end conditions
+   * Returns an object with the game status
+   */
+  static checkGameEnd(gameState) {
+    const currentPlayer = gameState.player;
+    const isInCheck = this.isInCheck(currentPlayer, gameState);
+    const allMoves = this.generateAllMoves(currentPlayer, gameState);
+
+    if (isInCheck && allMoves.length === 0) {
+      const winner = currentPlayer === "white" ? "black" : "white";
+      return {
+        gameOver: true,
+        result: "checkmate",
+        winner: winner,
+        message: `Checkmate! ${winner.charAt(0).toUpperCase() + winner.slice(1)} wins!`,
+      };
+    }
+
+    if (!isInCheck && allMoves.length === 0) {
+      return {
+        gameOver: true,
+        result: "stalemate",
+        winner: null,
+        message: "Stalemate! It is a draw!",
+      };
+    }
+
+    if (this.isDrawByRepetition(gameState)) {
+      return {
+        gameOver: true,
+        result: "repetition",
+        winner: null,
+        message: "Draw by repetition!",
+      };
+    }
+
+    if (this.is50MoveRule(gameState)) {
+      return {
+        gameOver: true,
+        result: "50-move-rule",
+        winner: null,
+        message: "Draw by 50 move rule!",
+      };
+    }
+
+    if (this.isInsufficientMaterial(gameState)) {
+      return {
+        gameOver: true,
+        result: "insufficient-material",
+        winner: null,
+        message: "Draw by insufficient material!",
+      };
+    }
+
+    // Game continues as usual
+    return {
+      gameOver: false,
+      result: null,
+      winner: null,
+      message: null,
+    };
+  }
+
+  static isDrawByRepetition(gameState) {
+    const currentPosition = gameState.getPosition();
+    const occurences = gameState.occuredPositions[currentPosition] ?? 0;
+    return occurences >= 3;
+  }
+
+  static is50MoveRule(gameState) {
+    return gameState.turnsSinceLastEvent >= 100;
+  }
+
+  static isInsufficientMaterial(gameState) {
+    const pieces = [];
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const piece = gameState.boardState[row][col];
+        if (piece !== null) {
+          pieces.push({ piece, row, col });
+
+          // Return early for performance improvement.
+          if (pieces.length > 4) return false;
+        }
+      }
+    }
+
+    console.log(pieces);
+    // King vs King
+    if (pieces.length === 2) {
+      return true;
+    }
+
+    // King + Bishop vs King or King + Knight vs King
+    if (pieces.length === 3) {
+      for (const piece of pieces) {
+        const pieceType = PIECES[piece];
+        if (pieceType === "knight" || pieceType === "bishop") return true;
+      }
+    }
+
+    // King + Bishop vs King + Bishop - on same colour squares
+    if (pieces.length === 4) {
+      const bishops = pieces.filter((p) => PIECES[p] === "bishop");
+      if (bishops.length === 2) {
+        const bishop1Square = (bishops[0].row + bishops[0].col) % 2;
+        const bishop2Square = (bishops[1].row + bishops[1].col) % 2;
+        return bishop1Square === bishop2Square;
+      }
+    }
+
+    return false;
+  }
 }
