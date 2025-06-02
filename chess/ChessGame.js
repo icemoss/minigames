@@ -212,7 +212,7 @@ export class ChessGame {
 
   is50MoveRule() {
     // TODO: Implement 50-move rule
-    return this.turnsSinceLastEvent >= 100; // 50 moves per side
+    return this.gameState.turnsSinceLastEvent >= 100; // 50 moves per side
   }
 
   // Configuration methods
