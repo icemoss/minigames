@@ -353,6 +353,7 @@ export class ChessRules {
     }
     return moves;
   }
+
   static getPiece(row, col, gameState) {
     return gameState.boardState[row]?.[col] || null;
   }
@@ -498,8 +499,8 @@ export class ChessRules {
     }
 
     // 2. Check castling rights (king and rook haven't moved)
-    let hasRights = false;
-    let rookCol = 0;
+    let hasRights;
+    let rookCol;
 
     if (side === "kingside") {
       hasRights =
@@ -631,57 +632,6 @@ export class ChessRules {
       }
     }
     return null;
-  }
-
-  static getLegalMovesWithoutCheckFilter(row, col, gameState) {
-    // This generates moves without filtering for check (used internally)
-    const piece = this.getPiece(row, col, gameState);
-    if (!piece) return [];
-
-    const color = this.getColor(piece);
-    const pieceType = PIECES[piece];
-    let legalMoves = [];
-
-    switch (pieceType) {
-      case "pawn":
-        legalMoves = this.getPawnMoves(row, col, piece, color, gameState);
-        break;
-      case "king":
-        // For check detection, don't include castling moves
-        const directions = [
-          [-1, -1],
-          [-1, 0],
-          [-1, 1],
-          [0, -1],
-          [0, 1],
-          [1, -1],
-          [1, 0],
-          [1, 1],
-        ];
-        legalMoves = this.getLeapingMoves(
-          row,
-          col,
-          piece,
-          color,
-          directions,
-          gameState,
-        );
-        break;
-      case "knight":
-        legalMoves = this.getKnightMoves(row, col, piece, color, gameState);
-        break;
-      case "rook":
-        legalMoves = this.getRookMoves(row, col, piece, color, gameState);
-        break;
-      case "bishop":
-        legalMoves = this.getBishopMoves(row, col, piece, color, gameState);
-        break;
-      case "queen":
-        legalMoves = this.getQueenMoves(row, col, piece, color, gameState);
-        break;
-    }
-
-    return legalMoves;
   }
 
   static isCheckmate(color, gameState) {

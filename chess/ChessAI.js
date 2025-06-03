@@ -177,6 +177,7 @@ export class ChessAI {
     const centerDistance = Math.abs(3.5 - row) + Math.abs(3.5 - col);
     return Math.max(0, 7 - centerDistance);
   }
+
   /**
    * Placeholder for future alpha-beta pruning implementation
    * This clean interface makes it easy to upgrade the search
@@ -195,16 +196,6 @@ export class ChessAI {
    */
   setSearchDepth(depth) {
     this.searchDepth = Math.max(1, Math.min(depth, 6)); // Limit to reasonable range
-  }
-
-  /**
-   * Gets current search statistics
-   */
-  getStats() {
-    return {
-      nodesSearched: this.nodesSearched,
-      searchDepth: this.searchDepth,
-    };
   }
 }
 

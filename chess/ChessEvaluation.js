@@ -1,12 +1,12 @@
 import {
-  PIECE_VALUES,
-  PIECE_SQUARE_TABLES,
-  CHECKMATE_VALUE,
-  CHECK_PENALTY,
   CASTLING_BONUS,
+  CHECK_PENALTY,
+  CHECKMATE_VALUE,
   DOUBLED_PAWN_PENALTY,
-  RANDOMIZATION_FACTOR,
+  PIECE_SQUARE_TABLES,
+  PIECE_VALUES,
   PIECES,
+  RANDOMIZATION_FACTOR,
   WHITE_PIECES,
 } from "./constants.js";
 
@@ -24,9 +24,6 @@ export class ChessEvaluation {
         const pieceType = PIECES[piece];
         const pieceValue = PIECE_VALUES[pieceType];
 
-        // Material value
-        const materialValue = pieceValue;
-
         // Positional value
         const positionValue = this.getPositionalValue(
           pieceType,
@@ -38,9 +35,9 @@ export class ChessEvaluation {
 
         // Apply values based on color
         if (color === "white") {
-          evaluation += materialValue + positionValue;
+          evaluation += pieceValue + positionValue;
         } else {
-          evaluation -= materialValue + positionValue;
+          evaluation -= pieceValue + positionValue;
         }
       }
     }
