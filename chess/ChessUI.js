@@ -1,5 +1,3 @@
-"use strict";
-
 export class ChessUI {
   constructor(boardElement) {
     this.board = boardElement;

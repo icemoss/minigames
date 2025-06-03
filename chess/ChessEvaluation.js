@@ -1,18 +1,13 @@
-"use strict";
-
 import {
   PIECE_VALUES,
   PIECE_SQUARE_TABLES,
-  MOBILITY_BONUSES,
   CHECKMATE_VALUE,
   CHECK_PENALTY,
   CASTLING_BONUS,
   DOUBLED_PAWN_PENALTY,
-  KING_SAFETY_BONUS,
   RANDOMIZATION_FACTOR,
   PIECES,
   WHITE_PIECES,
-  BLACK_PIECES,
 } from "./constants.js";
 
 export class ChessEvaluation {

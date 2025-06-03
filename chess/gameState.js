@@ -1,5 +1,3 @@
-"use strict";
-
 import { INITIAL_BOARD } from "./constants.js";
 
 export class Gamestate {

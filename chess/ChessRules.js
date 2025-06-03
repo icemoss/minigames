@@ -1,7 +1,6 @@
-"use strict";
-
 import { Move } from "./move.js";
-import { PIECES, WHITE_PIECES, BLACK_PIECES } from "./constants.js";
+import { Gamestate } from "./gameState.js";
+import { PIECES, WHITE_PIECES } from "./constants.js";
 
 export class ChessRules {
   /**
@@ -60,9 +59,28 @@ export class ChessRules {
    * Makes a temporary move for AI evaluation (returns new game state)
    */
   static makeTemporaryMove(move, gameState) {
-    const newGameState = structuredClone(gameState);
+    const newGameState = this.cloneGameState(gameState);
     this.executeMove(move, newGameState);
     return newGameState;
+  }
+
+  /**
+   * Clone the game state, preserving the methods
+   */
+  static cloneGameState(gameState) {
+    const clonedState = new Gamestate();
+    clonedState.player = gameState.player;
+    clonedState.boardState = structuredClone(gameState.boardState);
+    clonedState.enPassant = gameState.enPassant;
+    clonedState.castleBlackKingside = gameState.castleBlackKingside;
+    clonedState.castleBlackQueenside = gameState.castleBlackQueenside;
+    clonedState.castleWhiteKingside = gameState.castleWhiteKingside;
+    clonedState.castleWhiteQueenside = gameState.castleWhiteQueenside;
+    clonedState.turnsSinceLastEvent = gameState.turnsSinceLastEvent;
+    clonedState.occurredPositions = structuredClone(
+      gameState.occurredPositions,
+    );
+    return clonedState;
   }
 
   /**
@@ -357,7 +375,7 @@ export class ChessRules {
 
     for (const move of moves) {
       // Make a temporary move
-      const tempGameState = structuredClone(gameState);
+      const tempGameState = this.cloneGameState(gameState);
       this.executeMove(move, tempGameState);
 
       // Check if our king is in check after this move

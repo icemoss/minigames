@@ -1,5 +1,3 @@
-"use strict";
-
 import { ChessGame } from "./ChessGame.js";
 
 // Initialize the game when DOM is loaded

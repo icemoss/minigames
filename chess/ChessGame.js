@@ -1,11 +1,8 @@
-"use strict";
-
-import { Move } from "./move.js";
 import { ChessRules } from "./ChessRules.js";
 import { ChessAI } from "./ChessAI.js";
 import { ChessUI } from "./ChessUI.js";
 import { Gamestate } from "./gameState.js";
-import { PIECES, WHITE_PIECES, BLACK_PIECES } from "./constants.js";
+import { WHITE_PIECES } from "./constants.js";
 
 export class ChessGame {
   constructor(boardElement, twoPlayer = false) {

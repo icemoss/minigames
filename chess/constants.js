@@ -1,5 +1,3 @@
-"use strict";
-
 // Piece mappings
 export const WHITE_PIECES = new Set(["♔", "♕", "♖", "♗", "♘", "♙"]);
 export const BLACK_PIECES = new Set(["♚", "♛", "♜", "♝", "♞", "♟"]);

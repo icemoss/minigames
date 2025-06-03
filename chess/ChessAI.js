@@ -1,5 +1,3 @@
-"use strict";
-
 import { ChessEvaluation } from "./ChessEvaluation.js";
 import { PIECE_VALUES, PIECES } from "./constants.js";
 
