@@ -69,6 +69,11 @@ export class ChessRules {
    * Executes a move on the game state (modifies the state)
    */
   static executeMove(move, gameState) {
+    const isPawnMove = PIECES[move.piece] === "pawn";
+    const isCapture =
+      gameState.boardState[move.toRow][move.toCol] !== null ||
+      (move.capturedRow !== null && move.capturedCol !== null);
+
     // Remove piece from original position
     gameState.boardState[move.fromRow][move.fromCol] = null;
 
@@ -95,6 +100,9 @@ export class ChessRules {
 
     // Update en passant
     gameState.enPassant = move.doublePawnMove || null;
+
+    // Update game history
+    this.updateGameHistory(gameState, isPawnMove || isCapture);
 
     // Switch turns
     gameState.player = gameState.player === "white" ? "black" : "white";
@@ -743,9 +751,9 @@ export class ChessRules {
   }
 
   static isDrawByRepetition(gameState) {
-    const currentPosition = gameState.getPosition();
-    const occurences = gameState.occuredPositions[currentPosition] ?? 0;
-    return occurences >= 3;
+    const currentPosition = JSON.stringify(gameState.getPosition());
+    const occurrences = gameState.occurredPositions[currentPosition] ?? 0;
+    return occurrences >= 3;
   }
 
   static is50MoveRule(gameState) {
@@ -766,7 +774,6 @@ export class ChessRules {
       }
     }
 
-    console.log(pieces);
     // King vs King
     if (pieces.length === 2) {
       return true;
@@ -775,14 +782,14 @@ export class ChessRules {
     // King + Bishop vs King or King + Knight vs King
     if (pieces.length === 3) {
       for (const piece of pieces) {
-        const pieceType = PIECES[piece];
+        const pieceType = PIECES[piece.piece];
         if (pieceType === "knight" || pieceType === "bishop") return true;
       }
     }
 
     // King + Bishop vs King + Bishop - on same colour squares
     if (pieces.length === 4) {
-      const bishops = pieces.filter((p) => PIECES[p] === "bishop");
+      const bishops = pieces.filter((p) => PIECES[p.piece] === "bishop");
       if (bishops.length === 2) {
         const bishop1Square = (bishops[0].row + bishops[0].col) % 2;
         const bishop2Square = (bishops[1].row + bishops[1].col) % 2;
@@ -791,5 +798,20 @@ export class ChessRules {
     }
 
     return false;
+  }
+
+  static updateGameHistory(gameState, moveWasPawnMoveOrCapture = false) {
+    if (moveWasPawnMoveOrCapture) {
+      gameState.turnsSinceLastEvent = 0;
+    } else {
+      gameState.turnsSinceLastEvent++;
+    }
+
+    const currentPosition = JSON.stringify(gameState.getPosition());
+    if (gameState.occurredPositions[currentPosition]) {
+      gameState.occurredPositions[currentPosition]++;
+    } else {
+      gameState.occurredPositions[currentPosition] = 1;
+    }
   }
 }

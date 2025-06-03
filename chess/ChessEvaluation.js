@@ -16,15 +16,7 @@ import {
 } from "./constants.js";
 
 export class ChessEvaluation {
-  /**
-   * Evaluates the current board position
-   * @param {ChessRules} rules - Chess rules instance for move generation
-   * @param {Object} gameState - Current game state
-   * @param {Function} getColor - Function to get piece color
-   * @param {Function} getPiece - Function to get piece at position
-   * @returns {number} Evaluation score (positive = white advantage)
-   */
-  static evaluatePosition(rules, gameState, getColor, getPiece) {
+  static evaluatePosition(rules, gameState) {
     let evaluation = 0;
 
     // Material and positional evaluation

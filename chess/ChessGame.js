@@ -19,8 +19,6 @@ export class ChessGame {
     // Game state
     this.gameState = new Gamestate();
 
-    // Game history for draw detection
-
     // Current move state
     this.selectedPiece = null;
     this.possibleMoves = [];
@@ -94,14 +92,12 @@ export class ChessGame {
     this.ui.renderBoard(this.gameState);
     this.ui.updateTurnIndicator(this.gameState.player);
 
-    // Update game history
-    this.updateGameHistory();
-
     // Check for game end
     this.checkGameEnd();
 
     // AI move if not two-player mode
     if (!this.twoPlayer && this.gameState.player === "black" && this.active) {
+      // Delay to not have unnaturally fast responses.
       setTimeout(() => this.makeAIMove(), 250);
     }
   }
@@ -138,37 +134,14 @@ export class ChessGame {
    * Check for game ending conditions
    */
   checkGameEnd() {
-    const currentPlayer = this.gameState.player;
+    const gameEndResult = this.rules.checkGameEnd(this.gameState);
 
-    console.log(`Checking game end for ${currentPlayer}`);
-
-    const isInCheck = this.rules.isInCheck(currentPlayer, this.gameState);
-    const allMoves = this.rules.generateAllMoves(currentPlayer, this.gameState);
-
-    console.log(`${currentPlayer} in check: ${isInCheck}`);
-    console.log(`${currentPlayer} has ${allMoves.length} legal moves`);
-
-    if (isInCheck && allMoves.length === 0) {
-      const winner = currentPlayer === "white" ? "Black" : "White";
-      console.log(`Checkmate! ${winner} wins!`);
-      this.ui.showMessage(`Checkmate! ${winner} wins!`);
+    if (gameEndResult.gameOver) {
+      if (gameEndResult.message) {
+        console.log(gameEndResult.message);
+        this.ui.showMessage(gameEndResult.message);
+      }
       this.active = false;
-    } else if (!isInCheck && allMoves.length === 0) {
-      console.log("Stalemate! It's a draw!");
-      this.ui.showMessage("Stalemate! It's a draw!");
-      this.active = false;
-    } else if (this.isDrawByRepetition()) {
-      console.log("Draw by repetition!");
-      this.ui.showMessage("Draw by repetition!");
-      this.active = false;
-    } else if (this.is50MoveRule()) {
-      console.log("Draw by 50-move rule!");
-      this.ui.showMessage("Draw by 50-move rule!");
-      this.active = false;
-    }
-
-    if (!this.active) {
-      console.log("Game ended");
     }
   }
 
@@ -192,27 +165,6 @@ export class ChessGame {
   getColor(piece) {
     if (!piece) return null;
     return WHITE_PIECES.has(piece) ? "white" : "black";
-  }
-
-  updateGameHistory() {
-    // TODO: Implement proper history tracking
-    const position = structuredClone(this.gameState);
-    if (this.gameState.occurredPositions[position]) {
-      this.gameState.occurredPositions[position]++;
-    } else {
-      this.gameState.occurredPositions[position] = 1;
-    }
-    this.gameState.turnsSinceLastEvent++;
-  }
-
-  isDrawByRepetition() {
-    // TODO: Implement repetition detection
-    return false;
-  }
-
-  is50MoveRule() {
-    // TODO: Implement 50-move rule
-    return this.gameState.turnsSinceLastEvent >= 100; // 50 moves per side
   }
 
   // Configuration methods

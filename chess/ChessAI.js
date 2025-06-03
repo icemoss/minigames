@@ -10,14 +10,6 @@ export class ChessAI {
     this.nodesSearched = 0;
   }
 
-  /**
-   * Main AI move generation function
-   * @param {string} color - Color to move for ("white" or "black")
-   * @param {Object} gameState - Current game state
-   * @param {Function} getColor - Function to get piece color
-   * @param {Function} getPiece - Function to get piece at position
-   * @returns {Object|null} Best move found
-   */
   generateMove(color, gameState, getColor, getPiece) {
     console.log(`AI generating move for ${color}`);
     this.nodesSearched = 0;
