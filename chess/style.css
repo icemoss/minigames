@@ -46,8 +46,12 @@ main {
     background-color: orange;
 }
 
-.last-move {
-    background-color: aqua;
+.last-move.light {
+    background-color: #f5f580;
+}
+
+.last-move.dark {
+    background-color: #b9ca42;
 }
 
 #reset {
