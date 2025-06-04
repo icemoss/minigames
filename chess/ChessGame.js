@@ -13,10 +13,8 @@ export class ChessGame {
     this.twoPlayer = twoPlayer;
     this.active = true;
 
-    // Game state
     this.gameState = new Gamestate();
 
-    // Current move state
     this.selectedPiece = null;
     this.possibleMoves = [];
 
@@ -55,10 +53,16 @@ export class ChessGame {
    * Select a piece and show possible moves
    */
   selectPiece(row, col) {
-    this.selectedPiece = { row, col };
-    this.possibleMoves = this.rules.getLegalMoves(row, col, this.gameState);
+    if (this.selectedPiece?.row === row && this.selectedPiece?.col === col) {
+      this.selectedPiece = null;
+      this.possibleMoves = [];
+      this.ui.clearSelection();
+    } else {
+      this.selectedPiece = { row, col };
+      this.possibleMoves = this.rules.getLegalMoves(row, col, this.gameState);
+      this.ui.setSelectedPiece(row, col);
+    }
 
-    this.ui.setSelectedPiece(row, col);
     this.ui.renderBoard(this.gameState, this.possibleMoves);
   }
 
