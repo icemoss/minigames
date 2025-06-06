@@ -1,4 +1,3 @@
-// Piece mappings
 export const WHITE_PIECES = new Set(["♔", "♕", "♖", "♗", "♘", "♙"]);
 export const BLACK_PIECES = new Set(["♚", "♛", "♜", "♝", "♞", "♟"]);
 
@@ -17,7 +16,6 @@ export const PIECES = {
   "♟": "pawn",
 };
 
-// Initial board setup
 export const INITIAL_BOARD = [
   ["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"], // black pieces
   ["♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"], // black pawns

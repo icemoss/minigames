@@ -718,16 +718,25 @@ export class ChessRules {
     };
   }
 
+  /**
+   * Check if the game position has occurred 3 or more times
+   */
   static isDrawByRepetition(gameState) {
     const currentPosition = JSON.stringify(gameState.getPosition());
     const occurrences = gameState.occurredPositions[currentPosition] ?? 0;
     return occurrences >= 3;
   }
 
+  /**
+   * Check if there has been 50 or more turns (100 moves)
+   */
   static is50MoveRule(gameState) {
     return gameState.turnsSinceLastEvent >= 100;
   }
 
+  /**
+   * Check if the sides have sufficient material to checkmate
+   */
   static isInsufficientMaterial(gameState) {
     const pieces = [];
     for (let row = 0; row < 8; row++) {
@@ -768,9 +777,14 @@ export class ChessRules {
     return false;
   }
 
+  /**
+   * Updates the trackers for 50 move rule and draw by repetition
+   */
   static updateGameHistory(gameState, moveWasPawnMoveOrCapture = false) {
     if (moveWasPawnMoveOrCapture) {
       gameState.turnsSinceLastEvent = 0;
+      // Clear occurred positions to reduce memory usage
+      gameState.occurredPositions = {};
     } else {
       gameState.turnsSinceLastEvent++;
     }

@@ -8,6 +8,6 @@ export class Move {
     this.capturedRow = options.capturedRow ?? null;
     this.capturedCol = options.capturedCol ?? null;
     this.doublePawnMove = options.doublePawnMove ?? null;
-    this.castling = options.castling ?? null; // { fromRow, fromCol, toRow, toCol, piece }
+    this.castling = options.castling ?? null;
   }
 }

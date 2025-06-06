@@ -107,7 +107,7 @@ export class ChessUI {
    * Shows a game message (checkmate, stalemate, etc.)
    */
   showMessage(message) {
-    // Simple alert for now - could be enhanced with a modal
+    // Maybe change to a modal dialog later?
     alert(message);
   }
 
@@ -115,7 +115,7 @@ export class ChessUI {
    * Updates the turn indicator
    */
   updateTurnIndicator(currentPlayer) {
-    // Could add a turn indicator element to the UI
+    // Maybe add a turn indicator to the ui later?
     console.log(`Current turn: ${currentPlayer}`);
   }
 }
